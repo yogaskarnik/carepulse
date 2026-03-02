@@ -1125,6 +1125,12 @@
                         <span style="font-size: 1.125rem;">📥</span>
                     </button>
 
+                    <!-- AI Agent (MCP Demo) -->
+                    <button class="icon-btn" title="AI Agent (MCP Demo)" onclick="showAIAgentModal()" style="background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); color: white; font-weight: 600; padding: 0 1rem; border-radius: 8px;">
+                        <span style="font-size: 1.125rem;">🤖</span>
+                        <span style="font-size: 0.875rem; margin-left: 0.25rem;">AI Agent</span>
+                    </button>
+
                     <!-- Settings -->
                     <button class="icon-btn" title="Settings" onclick="showSettings()">
                         <span style="font-size: 1.125rem;">⚙️</span>
@@ -1501,6 +1507,98 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="hideAddGeofenceModal()">Cancel</button>
                 <button class="btn btn-primary" onclick="document.getElementById('add-geofence-form').requestSubmit()">Create Zone</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Agent Modal (MCP Demo) -->
+    <div class="modal-overlay" id="ai-agent-modal" onclick="hideAIAgentModal()" style="display: none;">
+        <div class="modal" onclick="event.stopPropagation()" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="background: linear-gradient(90deg, #4285F4 0%, #34A853 100%); color: white;">
+                <h2 style="color: white; display: flex; align-items: center; gap: 0.75rem; margin: 0;">
+                    <span style="font-size: 1.75rem;">🤖</span>
+                    <span>Gemini AI Agent</span>
+                    <span style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-left: auto;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.89l7-3.11v8.21z"/>
+                        </svg>
+                        Powered by Gemini + MCP
+                    </span>
+                </h2>
+                <button class="modal-close" onclick="hideAIAgentModal()" style="color: white;">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- Description -->
+                <div style="background: linear-gradient(135deg, #f6f9ff 0%, #ffffff 100%); padding: 1.5rem; border-radius: 8px; border-left: 4px solid #4285F4; margin-bottom: 1.5rem;">
+                    <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>💡</span>
+                        <span>Autonomous Patient Monitoring</span>
+                    </div>
+                    <div style="font-size: 0.875rem; color: #6B7280; line-height: 1.6;">
+                        Ask the Gemini AI agent to monitor patients autonomously. The agent will decide which Nokia APIs to call,
+                        analyze the results, and take action if needed. This demonstrates true agentic AI workflow automation using
+                        <strong>Model Context Protocol (MCP)</strong>.
+                    </div>
+                </div>
+
+                <!-- Query Input -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">
+                        Ask the AI Agent:
+                    </label>
+                    <textarea
+                        id="agent-query"
+                        style="width: 100%; min-height: 100px; padding: 0.75rem; border: 2px solid #E5E7EB; border-radius: 8px; font-size: 0.9375rem; font-family: inherit; resize: vertical;"
+                        placeholder="Example: Check if Maria Rodriguez (+34640030646) is safe. Get her location, check device status, and run a comprehensive safety analysis. If risk is high, activate emergency QoS."
+                    >Check if Maria Rodriguez (+34640030646) is safe. Get her location, check device status, and run safety analysis.</textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                    <button class="btn btn-primary" onclick="runAIAgent()" id="run-agent-btn" style="flex: 1; background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); font-weight: 600;">
+                        <span>🚀</span>
+                        <span>Run AI Agent</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearAgentResults()" style="padding: 0 1.5rem;">
+                        <span>Clear</span>
+                    </button>
+                </div>
+
+                <!-- Results Area -->
+                <div id="agent-results" style="display: none;">
+                    <!-- Agent Status -->
+                    <div id="agent-status" style="padding: 1rem; background: #F3F4F6; border-radius: 8px; margin-bottom: 1rem; font-family: 'Courier New', monospace; font-size: 0.875rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div class="loading-spinner"></div>
+                            <span>Agent is thinking...</span>
+                        </div>
+                    </div>
+
+                    <!-- Tool Calls Timeline -->
+                    <div id="tool-calls-timeline" style="margin-bottom: 1.5rem;"></div>
+
+                    <!-- Final Response -->
+                    <div id="agent-final-response" style="display: none;"></div>
+
+                    <!-- Summary Stats -->
+                    <div id="agent-summary" style="display: none; background: #F9FAFB; padding: 1rem; border-radius: 8px; border: 1px solid #E5E7EB;">
+                        <div style="font-weight: 600; margin-bottom: 0.5rem; color: #374151;">📊 Execution Summary</div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 0.875rem;">
+                            <div>
+                                <div style="color: #6B7280;">Tools Called</div>
+                                <div id="summary-tools" style="font-weight: 700; font-size: 1.25rem; color: #4285F4;">-</div>
+                            </div>
+                            <div>
+                                <div style="color: #6B7280;">Iterations</div>
+                                <div id="summary-iterations" style="font-weight: 700; font-size: 1.25rem; color: #34A853;">-</div>
+                            </div>
+                            <div>
+                                <div style="color: #6B7280;">Status</div>
+                                <div id="summary-status" style="font-weight: 700; font-size: 1.25rem; color: #10B981;">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

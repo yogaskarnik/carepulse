@@ -456,6 +456,39 @@ async def monitor_patient(request: MonitoringRequest, db=Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/agent")
+async def run_gemini_agent(request: dict):
+    """Run Gemini AI Agent with MCP tools for autonomous patient monitoring"""
+    try:
+        from gemini_agent import GeminiCarePulseAgent
+
+        user_query = request.get("query", "")
+        max_iterations = request.get("max_iterations", 8)
+
+        if not user_query:
+            raise HTTPException(status_code=400, detail="Query is required")
+
+        if not GEMINI_API_KEY:
+            raise HTTPException(status_code=503, detail="Gemini API not configured")
+
+        # Run the agent
+        agent = GeminiCarePulseAgent(GEMINI_API_KEY)
+        result = await agent.run_agent(user_query, max_iterations=max_iterations)
+        await agent.close()
+
+        return {
+            "success": result.get("success", False),
+            "query": user_query,
+            "iterations": result.get("iterations", 0),
+            "actions_taken": result.get("actions_taken", []),
+            "final_response": result.get("final_response", ""),
+            "agent": "Gemini 2.5 Flash + MCP",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.websocket("/ws/patient/{patient_id}")
 async def websocket_endpoint(websocket: WebSocket, patient_id: int):
     """WebSocket endpoint for real-time patient monitoring"""

@@ -1177,3 +1177,186 @@ window.addEventListener('beforeunload', () => {
     if (websocket) websocket.close();
     if (autoRefreshInterval) clearInterval(autoRefreshInterval);
 });
+
+
+// ============================================================================
+// AI AGENT (MCP DEMO) Functions
+// ============================================================================
+
+function showAIAgentModal() {
+    document.getElementById('ai-agent-modal').style.display = 'flex';
+}
+
+function hideAIAgentModal() {
+    document.getElementById('ai-agent-modal').style.display = 'none';
+}
+
+function clearAgentResults() {
+    document.getElementById('agent-results').style.display = 'none';
+    document.getElementById('tool-calls-timeline').innerHTML = '';
+    document.getElementById('agent-final-response').style.display = 'none';
+    document.getElementById('agent-summary').style.display = 'none';
+}
+
+async function runAIAgent() {
+    const query = document.getElementById('agent-query').value.trim();
+
+    if (!query) {
+        showNotification('Please enter a query for the AI agent', 'warning');
+        return;
+    }
+
+    // Show results area
+    document.getElementById('agent-results').style.display = 'block';
+    document.getElementById('agent-status').style.display = 'block';
+    document.getElementById('tool-calls-timeline').innerHTML = '';
+    document.getElementById('agent-final-response').style.display = 'none';
+    document.getElementById('agent-summary').style.display = 'none';
+
+    // Disable button
+    const btn = document.getElementById('run-agent-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="loading-spinner" style="width: 16px; height: 16px;"></div><span>Running...</span>';
+
+    try {
+        const response = await fetch(`${API_BASE}/agent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: query,
+                max_iterations: 8
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || 'Agent failed');
+        }
+
+        // Hide status
+        document.getElementById('agent-status').style.display = 'none';
+
+        // Display tool calls timeline
+        displayToolCallsTimeline(data.actions_taken || []);
+
+        // Display final response
+        displayAgentFinalResponse(data.final_response || 'No response generated', data.success);
+
+        // Display summary
+        displayAgentSummary(data);
+
+    } catch (error) {
+        console.error('AI Agent error:', error);
+        document.getElementById('agent-status').innerHTML = `
+            <div style="display: flex; align-items: start; gap: 0.75rem; color: #DC2626;">
+                <span style="font-size: 1.5rem;">❌</span>
+                <div>
+                    <div style="font-weight: 600;">Agent Error</div>
+                    <div style="font-size: 0.875rem; margin-top: 0.25rem;">${error.message}</div>
+                </div>
+            </div>
+        `;
+        showNotification('AI Agent failed: ' + error.message, 'danger');
+    } finally {
+        // Re-enable button
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚀</span><span>Run AI Agent</span>';
+    }
+}
+
+function displayToolCallsTimeline(actions) {
+    const timeline = document.getElementById('tool-calls-timeline');
+
+    if (actions.length === 0) {
+        timeline.innerHTML = `
+            <div style="padding: 1rem; background: #FEF3C7; border-radius: 8px; border-left: 4px solid #F59E0B; color: #92400E;">
+                <strong>⚠️ No tools called</strong> - The agent completed without calling any tools.
+            </div>
+        `;
+        return;
+    }
+
+    const toolIcons = {
+        'get_patient_location': '📍',
+        'check_device_status': '📱',
+        'check_sim_swap': '🔄',
+        'trigger_emergency_qos': '🚀',
+        'create_safe_zone': '🗺️',
+        'analyze_patient_safety': '🧠'
+    };
+
+    timeline.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 1rem; color: #374151; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🛠️</span>
+            <span>Tool Execution Timeline</span>
+        </div>
+    `;
+
+    actions.forEach((action, index) => {
+        const icon = toolIcons[action.tool] || '🔧';
+        const success = action.result?.success !== false;
+        const message = action.result?.message || 'Completed';
+
+        const toolCard = document.createElement('div');
+        toolCard.style.cssText = `
+            padding: 1rem;
+            background: ${success ? '#F0FDF4' : '#FEF2F2'};
+            border-left: 4px solid ${success ? '#10B981' : '#EF4444'};
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        `;
+
+        toolCard.innerHTML = `
+            <div style="display: flex; align-items: start; gap: 0.75rem;">
+                <div style="font-size: 1.5rem;">${icon}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #374151; margin-bottom: 0.25rem;">
+                        Step ${index + 1}: ${action.tool.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </div>
+                    <div style="font-size: 0.875rem; color: #6B7280; font-family: 'Courier New', monospace; margin-bottom: 0.5rem;">
+                        ${JSON.stringify(action.arguments, null, 2).substring(0, 100)}${JSON.stringify(action.arguments).length > 100 ? '...' : ''}
+                    </div>
+                    <div style="font-size: 0.875rem; color: ${success ? '#10B981' : '#EF4444'}; font-weight: 500;">
+                        ${success ? '✅' : '❌'} ${message}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        timeline.appendChild(toolCard);
+    });
+}
+
+function displayAgentFinalResponse(response, success) {
+    const container = document.getElementById('agent-final-response');
+    container.style.display = 'block';
+
+    container.innerHTML = `
+        <div style="margin-bottom: 1.5rem; padding: 1.5rem; background: ${success ? 'linear-gradient(135deg, #f6f9ff 0%, #ffffff 100%)' : '#FEF2F2'}; border-radius: 8px; border-left: 4px solid ${success ? '#4285F4' : '#EF4444'};">
+            <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem;">
+                <span>${success ? '🤖' : '❌'}</span>
+                <span>Gemini AI Analysis</span>
+            </div>
+            <div style="color: #374151; line-height: 1.7; white-space: pre-wrap;">
+                ${response}
+            </div>
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #E5E7EB; font-size: 0.8125rem; color: #6B7280; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="opacity: 0.7;">
+                    <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.89l7-3.11v8.21z"/>
+                </svg>
+                Generated by Google Gemini 2.5 Flash • Model Context Protocol (MCP)
+            </div>
+        </div>
+    `;
+}
+
+function displayAgentSummary(data) {
+    const container = document.getElementById('agent-summary');
+    container.style.display = 'block';
+
+    document.getElementById('summary-tools').textContent = (data.actions_taken || []).length;
+    document.getElementById('summary-iterations').textContent = data.iterations || 0;
+    document.getElementById('summary-status').textContent = data.success ? '✅ Success' : '❌ Failed';
+    document.getElementById('summary-status').style.color = data.success ? '#10B981' : '#EF4444';
+}
