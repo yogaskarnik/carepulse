@@ -1,5 +1,7 @@
-const API_BASE = 'http://34.163.202.97:8000/api';
-const WS_BASE = 'ws://34.163.202.97:8000/ws';
+//const API_BASE = 'http://34.163.202.97:8000/api';
+//const WS_BASE = 'ws://34.163.202.97:8000/ws';
+const API_BASE = 'http://localhost:8000/api';
+const WS_BASE = 'ws://localhost:8000/ws';
 
 let map = null;
 let currentMarker = null;
@@ -1194,18 +1196,18 @@ function hideAIAgentModal() {
     document.getElementById('ai-agent-modal').style.display = 'none';
 }
 
-function toggleAIInsights() {
-    const contentWrapper = document.getElementById('ai-insights-content-wrapper');
-    const toggle = document.getElementById('ai-insights-toggle');
+function toggleAIInsightsPanel() {
+    const button = document.getElementById('ai-insights-button');
+    const panel = document.getElementById('ai-insights-panel');
 
-    if (contentWrapper.style.maxHeight === '0px' || contentWrapper.style.maxHeight === '') {
-        contentWrapper.style.maxHeight = '400px';
-        toggle.style.transform = 'rotate(0deg)';
-        toggle.textContent = '▼';
+    if (panel.style.display === 'none' || panel.style.display === '') {
+        // Expand: Hide button, show panel
+        button.style.display = 'none';
+        panel.style.display = 'block';
     } else {
-        contentWrapper.style.maxHeight = '0px';
-        toggle.style.transform = 'rotate(-90deg)';
-        toggle.textContent = '▶';
+        // Collapse: Show button, hide panel
+        button.style.display = 'flex';
+        panel.style.display = 'none';
     }
 }
 
