@@ -687,7 +687,8 @@
         }
 
         /* Modal */
-        .modal-backdrop {
+        .modal-backdrop,
+        .modal-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.5);
@@ -1094,12 +1095,6 @@
                 </button>
             </div>
 
-            <div class="sidebar-section" style="padding: 1rem 1.5rem; background: var(--color-border-light);">
-                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem;">
-                    <div class="status-dot" id="sidebar-connection-dot" style="background: #F59E0B;"></div>
-                    <span id="sidebar-connection-text" style="color: var(--color-text-secondary);">Connecting...</span>
-                </div>
-            </div>
         </aside>
 
         <!-- Main Content -->
@@ -1125,10 +1120,10 @@
                         <span style="font-size: 1.125rem;">📥</span>
                     </button>
 
-                    <!-- AI Agent (MCP Demo) -->
-                    <button class="icon-btn" title="AI Agent (MCP Demo)" onclick="showAIAgentModal()" style="background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); color: white; font-weight: 600; padding: 0 1rem; border-radius: 8px;">
+                    <!-- MCP Demo -->
+                    <button class="icon-btn" title="MCP Demo - Autonomous AI Monitoring" onclick="showAIAgentModal()" style="width: auto; height: auto; background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); color: white; font-weight: 600; padding: 0.5rem 1rem; border-radius: 8px; border: none;">
                         <span style="font-size: 1.125rem;">🤖</span>
-                        <span style="font-size: 0.875rem; margin-left: 0.25rem;">AI Agent</span>
+                        <span style="font-size: 0.875rem; margin-left: 0.25rem;">MCP Demo</span>
                     </button>
 
                     <!-- Settings -->
@@ -1299,58 +1294,66 @@
                             </div>
                         </div>
 
-                        <!-- Risk Factors -->
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">
-                                    ⚠️ Risk Factors
-                                    <span class="api-info">
-                                        i
-                                        <div class="api-tooltip">
-                                            <div class="api-badge">Nokia API #4</div>
-                                            <div class="api-name">🔐 SIM Swap Detection</div>
-                                            <div>Detects suspicious SIM card changes that could indicate fraud or device theft. Alerts when recent SIM swaps are detected.</div>
+                        <!-- Right Column: Risk Factors + Safe Zones -->
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <!-- Risk Factors -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">
+                                        ⚠️ Risk Factors
+                                        <span class="api-info">
+                                            i
+                                            <div class="api-tooltip">
+                                                <div class="api-badge">Nokia API #4</div>
+                                                <div class="api-name">🔐 SIM Swap Detection</div>
+                                                <div>Detects suspicious SIM card changes that could indicate fraud or device theft. Alerts when recent SIM swaps are detected.</div>
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="info-list" id="risk-factors" style="max-height: 120px; overflow-y: auto;">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">📊</div>
+                                            <div class="empty-text">Waiting for data...</div>
                                         </div>
-                                    </span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="card-body">
-                                <div class="info-list" id="risk-factors">
-                                    <div class="empty-state">
-                                        <div class="empty-icon">📊</div>
-                                        <div class="empty-text">Waiting for data...</div>
+
+                            <!-- Safe Zones -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">
+                                        🗺️ Safe Zones
+                                        <span class="api-info">
+                                            i
+                                            <div class="api-tooltip">
+                                                <div class="api-badge">Nokia API #2</div>
+                                                <div class="api-name">🗺️ Geofencing</div>
+                                                <div>Creates virtual boundaries around safe locations. Automatically alerts when patient enters or exits defined zones.</div>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <button class="btn btn-secondary" onclick="showAddGeofenceModal()" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem;">
+                                        <span>+</span>
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="geofences-list" style="max-height: 120px; overflow-y: auto;">
+                                        <div class="empty-state">
+                                            <div class="empty-icon">🏠</div>
+                                            <div class="empty-text">No zones</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- AI Insights Section (Gemini) -->
-                    <div class="card" id="ai-insights-card" style="display: none; border: 2px solid #4285F4; background: linear-gradient(135deg, #f6f9ff 0%, #ffffff 100%);">
-                        <div class="card-header" style="background: linear-gradient(90deg, #4285F4 0%, #34A853 100%); color: white; border-radius: 8px 8px 0 0;">
-                            <div class="card-title" style="display: flex; align-items: center; gap: 0.75rem; color: white;">
-                                <span style="font-size: 1.5rem;">🤖</span>
-                                <span style="font-weight: 700;">AI Insights</span>
-                                <span style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.89l7-3.11v8.21z"/>
-                                    </svg>
-                                    Powered by Google Gemini
-                                </span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div id="ai-insights-content" style="padding: 1rem; background: white; border-radius: 8px; border-left: 4px solid #4285F4; font-size: 0.9375rem; line-height: 1.7; color: #1f2937;">
-                                <div class="empty-state">
-                                    <div class="empty-icon">🤖</div>
-                                    <div class="empty-text">AI analysis will appear when risk is detected</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Bottom Grid -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
                         <!-- Recommendations -->
                         <div class="card">
                             <div class="card-header">
@@ -1371,34 +1374,6 @@
                                     <div class="empty-state">
                                         <div class="empty-icon">🤔</div>
                                         <div class="empty-text">Waiting...</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Safe Zones -->
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">
-                                    🗺️ Safe Zones
-                                    <span class="api-info">
-                                        i
-                                        <div class="api-tooltip">
-                                            <div class="api-badge">Nokia API #2</div>
-                                            <div class="api-name">🗺️ Geofencing</div>
-                                            <div>Creates virtual boundaries around safe locations. Automatically alerts when patient enters or exits defined zones.</div>
-                                        </div>
-                                    </span>
-                                </div>
-                                <button class="btn btn-secondary" onclick="showAddGeofenceModal()" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem;">
-                                    <span>+</span>
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <div id="geofences-list">
-                                    <div class="empty-state">
-                                        <div class="empty-icon">🏠</div>
-                                        <div class="empty-text">No zones</div>
                                     </div>
                                 </div>
                             </div>
@@ -1517,12 +1492,12 @@
             <div class="modal-header" style="background: linear-gradient(90deg, #4285F4 0%, #34A853 100%); color: white;">
                 <h2 style="color: white; display: flex; align-items: center; gap: 0.75rem; margin: 0;">
                     <span style="font-size: 1.75rem;">🤖</span>
-                    <span>Gemini AI Agent</span>
+                    <span>MCP Demo - Autonomous Patient Monitoring</span>
                     <span style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-left: auto;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.89l7-3.11v8.21z"/>
                         </svg>
-                        Powered by Gemini + MCP
+                        Gemini + MCP
                     </span>
                 </h2>
                 <button class="modal-close" onclick="hideAIAgentModal()" style="color: white;">×</button>
@@ -1532,19 +1507,19 @@
                 <div style="background: linear-gradient(135deg, #f6f9ff 0%, #ffffff 100%); padding: 1.5rem; border-radius: 8px; border-left: 4px solid #4285F4; margin-bottom: 1.5rem;">
                     <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
                         <span>💡</span>
-                        <span>Autonomous Patient Monitoring</span>
+                        <span>Model Context Protocol (MCP) Integration</span>
                     </div>
                     <div style="font-size: 0.875rem; color: #6B7280; line-height: 1.6;">
-                        Ask the Gemini AI agent to monitor patients autonomously. The agent will decide which Nokia APIs to call,
-                        analyze the results, and take action if needed. This demonstrates true agentic AI workflow automation using
-                        <strong>Model Context Protocol (MCP)</strong>.
+                        This demonstrates <strong>autonomous AI agent workflow</strong> using MCP with Gemini 2.5 Flash.
+                        The agent autonomously decides which Nokia Network APIs to call (Location, Device Status, SIM Swap, QoS, Geofencing),
+                        analyzes patient safety in real-time, and takes action when needed. True agentic behavior with zero hardcoded rules.
                     </div>
                 </div>
 
                 <!-- Query Input -->
                 <div style="margin-bottom: 1.5rem;">
                     <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151;">
-                        Ask the AI Agent:
+                        Ask the MCP Agent:
                     </label>
                     <textarea
                         id="agent-query"
@@ -1555,11 +1530,11 @@
 
                 <!-- Action Buttons -->
                 <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-                    <button class="btn btn-primary" onclick="runAIAgent()" id="run-agent-btn" style="flex: 1; background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); font-weight: 600;">
+                    <button class="btn btn-primary" onclick="runAIAgent()" id="run-agent-btn" style="background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); font-weight: 600; padding: 0.75rem 1.5rem;">
                         <span>🚀</span>
-                        <span>Run AI Agent</span>
+                        <span>Run Agent</span>
                     </button>
-                    <button class="btn btn-secondary" onclick="clearAgentResults()" style="padding: 0 1.5rem;">
+                    <button class="btn btn-secondary" onclick="clearAgentResults()" style="padding: 0.75rem 1.5rem;">
                         <span>Clear</span>
                     </button>
                 </div>
@@ -1570,7 +1545,7 @@
                     <div id="agent-status" style="padding: 1rem; background: #F3F4F6; border-radius: 8px; margin-bottom: 1rem; font-family: 'Courier New', monospace; font-size: 0.875rem;">
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <div class="loading-spinner"></div>
-                            <span>Agent is thinking...</span>
+                            <span>MCP Agent is processing...</span>
                         </div>
                     </div>
 
@@ -1597,6 +1572,38 @@
                                 <div id="summary-status" style="font-weight: 700; font-size: 1.25rem; color: #10B981;">-</div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating AI Insights Panel -->
+    <div id="ai-insights-float" style="position: fixed; bottom: 20px; right: 20px; width: 320px; max-height: 400px; z-index: 10000; display: none;">
+        <div style="background: white; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05); overflow: hidden; transition: all 0.3s ease;">
+            <!-- Header -->
+            <div onclick="toggleAIInsights()" style="background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); padding: 0.75rem 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; color: white;">
+                    <span style="font-size: 1.25rem;">🤖</span>
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.875rem;">AI Insights</div>
+                        <div style="font-size: 0.625rem; opacity: 0.9; display: flex; align-items: center; gap: 0.35rem;">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V7.89l7-3.11v8.21z"/>
+                            </svg>
+                            Powered by Gemini
+                        </div>
+                    </div>
+                </div>
+                <div id="ai-insights-toggle" style="color: white; font-size: 1rem; transition: transform 0.3s ease;">▼</div>
+            </div>
+
+            <!-- Content -->
+            <div id="ai-insights-content-wrapper" style="max-height: 300px; overflow-y: auto; transition: max-height 0.3s ease;">
+                <div id="ai-insights-content" style="padding: 1rem; font-size: 0.8125rem; line-height: 1.6; color: #1f2937; border-left: 3px solid #4285F4; margin: 0.75rem;">
+                    <div style="text-align: center; padding: 1.5rem 0.75rem; color: #9CA3AF;">
+                        <div style="font-size: 2rem; margin-bottom: 0.375rem;">🤖</div>
+                        <div style="font-size: 0.75rem;">AI analysis will appear when risk is detected</div>
                     </div>
                 </div>
             </div>

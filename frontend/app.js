@@ -344,12 +344,12 @@ function updateDashboard(data) {
     }
 
     // Update AI Insights (Gemini)
-    const aiInsightsCard = document.getElementById('ai-insights-card');
+    const aiInsightsFloat = document.getElementById('ai-insights-float');
     const aiInsightsContent = document.getElementById('ai-insights-content');
 
     if (anomaly_analysis.ai_insights && anomaly_analysis.ai_insights.trim() !== '') {
-        // Show the AI insights card
-        aiInsightsCard.style.display = 'block';
+        // Show the floating AI insights panel
+        aiInsightsFloat.style.display = 'block';
 
         // Check if it's an error message
         const isError = anomaly_analysis.ai_insights.includes('Unable to generate') ||
@@ -690,6 +690,9 @@ function connectWebSocket(patientId) {
 function updateConnectionStatus(connected, status = 'normal') {
     const sidebarDot = document.getElementById('sidebar-connection-dot');
     const sidebarText = document.getElementById('sidebar-connection-text');
+
+    // Check if elements exist (removed from UI)
+    if (!sidebarDot || !sidebarText) return;
 
     if (connected) {
         sidebarDot.style.background = '#10B981';
@@ -1189,6 +1192,21 @@ function showAIAgentModal() {
 
 function hideAIAgentModal() {
     document.getElementById('ai-agent-modal').style.display = 'none';
+}
+
+function toggleAIInsights() {
+    const contentWrapper = document.getElementById('ai-insights-content-wrapper');
+    const toggle = document.getElementById('ai-insights-toggle');
+
+    if (contentWrapper.style.maxHeight === '0px' || contentWrapper.style.maxHeight === '') {
+        contentWrapper.style.maxHeight = '400px';
+        toggle.style.transform = 'rotate(0deg)';
+        toggle.textContent = '▼';
+    } else {
+        contentWrapper.style.maxHeight = '0px';
+        toggle.style.transform = 'rotate(-90deg)';
+        toggle.textContent = '▶';
+    }
 }
 
 function clearAgentResults() {
