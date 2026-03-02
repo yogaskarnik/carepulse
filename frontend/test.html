@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CarePulse API Test</title>
+</head>
+<body>
+    <h1>CarePulse API Test</h1>
+    <button onclick="testAPI()">Test Monitor API</button>
+    <pre id="output"></pre>
+
+    <script>
+        async function testAPI() {
+            const output = document.getElementById('output');
+            output.textContent = 'Testing...';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/monitor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ patient_id: 5 })
+                });
+
+                const data = await response.json();
+                output.textContent = JSON.stringify(data, null, 2);
+
+                // Test the same updates as the dashboard
+                console.log('Location:', data.location);
+                console.log('Device:', data.device_status);
+                console.log('Network:', data.device_status.network_type);
+                console.log('Battery:', data.device_status.battery_level);
+
+            } catch (error) {
+                output.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

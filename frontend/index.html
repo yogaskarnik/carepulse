@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarePulse - Professional Care Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --color-bg: #F8FAFB;
+            --color-surface: #FFFFFF;
+            --color-border: #E5E7EB;
+            --color-border-light: #F3F4F6;
+
+            --color-primary: #3B82F6;
+            --color-primary-hover: #2563EB;
+            --color-primary-light: #DBEAFE;
+
+            --color-success: #10B981;
+            --color-success-light: #D1FAE5;
+            --color-success-bg: #ECFDF5;
+
+            --color-warning: #F59E0B;
+            --color-warning-light: #FDE68A;
+            --color-warning-bg: #FFFBEB;
+
+            --color-danger: #EF4444;
+            --color-danger-light: #FCA5A5;
+            --color-danger-bg: #FEF2F2;
+
+            --color-text: #111827;
+            --color-text-secondary: #6B7280;
+            --color-text-tertiary: #9CA3AF;
+
+            --sidebar-width: 280px;
+            --header-height: 64px;
+
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--color-surface);
+            border-right: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s ease, width 0.3s ease;
+            position: relative;
+            z-index: 1000;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+            width: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: margin-left 0.3s ease;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1100;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            box-shadow: var(--shadow-md);
+        }
+
+        .hamburger-btn:hover {
+            background: var(--color-primary);
+            color: white;
+            border-color: var(--color-primary);
+        }
+
+        .hamburger-icon {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 18px;
+        }
+
+        .hamburger-icon span {
+            display: block;
+            height: 2px;
+            width: 100%;
+            background: currentColor;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active .hamburger-icon span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        .header {
+            height: var(--header-height);
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 0 2rem;
+            flex-shrink: 0;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.625rem 1rem 0.625rem 2.5rem;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            transition: all 0.15s ease;
+            background: var(--color-bg);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-light);
+            background: var(--color-surface);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.875rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--color-text-tertiary);
+            pointer-events: none;
+        }
+
+        .header-icons {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+            position: relative;
+        }
+
+        .icon-btn:hover {
+            background: var(--color-border-light);
+            color: var(--color-text);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--color-danger);
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 0.6875rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--color-surface);
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        /* Sidebar */
+        .logo-section {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--color-border-light);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--color-text);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .sidebar-section {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid var(--color-border-light);
+        }
+
+        .sidebar-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-tertiary);
+            margin-bottom: 0.75rem;
+            padding: 0 0.5rem;
+        }
+
+        .patient-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .patient-item {
+            padding: 0.75rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+        }
+
+        .patient-item:hover {
+            background: var(--color-border-light);
+        }
+
+        .patient-item.active {
+            background: var(--color-primary-light);
+            color: var(--color-primary);
+        }
+
+        .patient-delete {
+            display: none;
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: var(--color-danger);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            z-index: 10;
+        }
+
+        .patient-item:hover .patient-delete {
+            display: flex;
+        }
+
+        .patient-delete:hover {
+            background: #DC2626;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .patient-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #E0E7FF, #C7D2FE);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--color-primary);
+            flex-shrink: 0;
+        }
+
+        .patient-item.active .patient-avatar {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .patient-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .patient-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .patient-status {
+            font-size: 0.75rem;
+            color: var(--color-text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .add-patient-btn {
+            width: 100%;
+            padding: 0.625rem;
+            background: var(--color-surface);
+            border: 1.5px dashed var(--color-border);
+            border-radius: 6px;
+            color: var(--color-text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .add-patient-btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+            background: var(--color-primary-light);
+        }
+
+        /* Header */
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .header-subtitle {
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.875rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid;
+        }
+
+        .status-badge.success {
+            background: var(--color-success-bg);
+            color: var(--color-success);
+            border-color: var(--color-success-light);
+        }
+
+        .status-badge.warning {
+            background: var(--color-warning-bg);
+            color: var(--color-warning);
+            border-color: var(--color-warning-light);
+        }
+
+        .status-badge.danger {
+            background: var(--color-danger-bg);
+            color: var(--color-danger);
+            border-color: var(--color-danger-light);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1.125rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background: var(--color-surface);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-border-light);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            overflow: visible;
+        }
+
+        .card-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--color-border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            overflow: visible;
+            position: relative;
+        }
+
+        .card-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        /* Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            position: relative;
+            overflow: visible;
+        }
+
+        .metric-label {
+            font-size: 0.8125rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.375rem;
+        }
+
+        .metric-subtitle {
+            font-size: 0.75rem;
+            color: var(--color-text-tertiary);
+        }
+
+        .metric-icon {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+
+        /* Risk Score */
+        .risk-score-card {
+            background: var(--color-surface);
+            border: 2px solid;
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .risk-score-card.low {
+            border-color: var(--color-success);
+            background: var(--color-success-bg);
+        }
+
+        .risk-score-card.medium {
+            border-color: var(--color-warning);
+            background: var(--color-warning-bg);
+        }
+
+        .risk-score-card.high,
+        .risk-score-card.critical {
+            border-color: var(--color-danger);
+            background: var(--color-danger-bg);
+        }
+
+        .risk-score-value {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .risk-score-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Map */
+        #map {
+            height: 450px;
+            border-radius: 6px;
+            border: 1px solid var(--color-border);
+        }
+
+        /* Lists */
+        .info-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .info-item {
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.625rem;
+            line-height: 1.5;
+        }
+
+        .info-item.success {
+            background: var(--color-success-bg);
+            color: var(--color-success);
+        }
+
+        .info-item.warning {
+            background: var(--color-warning-bg);
+            color: var(--color-warning);
+        }
+
+        .info-item.danger {
+            background: var(--color-danger-bg);
+            color: var(--color-danger);
+        }
+
+        .info-item-icon {
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        /* Alert Banner */
+        .alert-banner {
+            padding: 1rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-left: 3px solid;
+        }
+
+        .alert-banner.danger {
+            background: var(--color-danger-bg);
+            border-color: var(--color-danger);
+            color: var(--color-danger);
+        }
+
+        .alert-banner.warning {
+            background: var(--color-warning-bg);
+            border-color: var(--color-warning);
+            color: var(--color-warning);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: var(--color-text-tertiary);
+        }
+
+        .empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.4;
+        }
+
+        .empty-text {
+            font-size: 0.875rem;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal {
+            background: var(--color-surface);
+            border-radius: 8px;
+            max-width: 480px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--color-border);
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.15s ease;
+            background: var(--color-surface);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-light);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--color-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-text-tertiary);
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+        }
+
+        /* Collapsible Metrics Section */
+        .metrics-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .metrics-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .metrics-header:hover {
+            background: var(--color-bg);
+        }
+
+        .metrics-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .metrics-header-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .metrics-quick-view {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-size: 0.8125rem;
+        }
+
+        .quick-metric {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--color-text-secondary);
+        }
+
+        .quick-metric-value {
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .expand-icon {
+            transition: transform 0.2s ease;
+            color: var(--color-text-tertiary);
+            font-size: 1.125rem;
+        }
+
+        .metrics-section.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .metrics-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, overflow 0s 0.3s;
+        }
+
+        .metrics-section.expanded .metrics-content {
+            max-height: 500px;
+            overflow: visible;
+            transition: max-height 0.3s ease, overflow 0s;
+        }
+
+        .metrics-grid-wrapper {
+            padding: 1rem 0 0 0;
+        }
+
+        /* API Info Badge & Tooltip */
+        .api-info {
+            position: relative;
+            cursor: help;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--color-primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: 0.5rem;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .api-info:hover {
+            background: var(--color-primary);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .api-tooltip {
+            display: none;
+            position: absolute;
+            background: #1F2937;
+            color: white;
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 300px;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            z-index: 10000;
+            bottom: calc(100% + 15px);
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: normal;
+        }
+
+        .api-info:hover .api-tooltip {
+            display: block;
+        }
+
+        .api-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: #1F2937;
+        }
+
+        .api-name {
+            font-weight: 700;
+            color: var(--color-primary-light);
+            margin-bottom: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .api-badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--color-primary-light);
+            padding: 0.125rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Test Data Toggle */
+        .test-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.875rem;
+            background: #FFF7ED;
+            border: 1.5px solid #FB923C;
+            border-radius: 6px;
+            color: #EA580C;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .test-toggle:hover {
+            background: #FFEDD5;
+            border-color: #EA580C;
+        }
+
+        .test-toggle.active {
+            background: #EA580C;
+            color: white;
+            border-color: #EA580C;
+        }
+
+        .test-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Live Indicator */
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            background: #10B981;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: 0.5rem;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Hamburger Menu Button -->
+        <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()">
+            <div class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </button>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo-section">
+                <div class="logo">
+                    <div class="logo-icon">💙</div>
+                    <div>
+                        <div>CarePulse</div>
+                        <div style="font-size: 0.75rem; font-weight: 400; color: var(--color-text-secondary);">Connected to care</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section" style="flex: 1; overflow-y: auto;">
+                <div class="sidebar-section-title">Patients</div>
+                <div class="patient-list" id="patient-list">
+                    <div class="empty-state" style="padding: 2rem 1rem;">
+                        <div class="empty-icon">👤</div>
+                        <div class="empty-text">No patients yet.<br>Add your first patient.</div>
+                    </div>
+                </div>
+                <button class="add-patient-btn" onclick="showAddPatientModal()" style="margin-top: 1rem;">
+                    <span style="font-size: 1.125rem;">+</span>
+                    <span>Add Patient</span>
+                </button>
+            </div>
+
+            <div class="sidebar-section" style="padding: 1rem 1.5rem; background: var(--color-border-light);">
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem;">
+                    <div class="status-dot" id="sidebar-connection-dot" style="background: #F59E0B;"></div>
+                    <span id="sidebar-connection-text" style="color: var(--color-text-secondary);">Connecting...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <!-- Search Bar -->
+                <div class="search-bar">
+                    <div class="search-icon">🔍</div>
+                    <input type="text" class="search-input" placeholder="Search patients, alerts, locations..." id="search-input">
+                </div>
+
+                <!-- Header Icons and Actions -->
+                <div class="header-icons">
+                    <!-- Notifications -->
+                    <button class="icon-btn" title="Notifications" onclick="showNotifications()">
+                        <span style="font-size: 1.125rem;">🔔</span>
+                        <div class="notification-badge" id="notification-badge" style="display: none;">0</div>
+                    </button>
+
+                    <!-- Export Data -->
+                    <button class="icon-btn" title="Export Data" onclick="exportData()">
+                        <span style="font-size: 1.125rem;">📥</span>
+                    </button>
+
+                    <!-- Settings -->
+                    <button class="icon-btn" title="Settings" onclick="showSettings()">
+                        <span style="font-size: 1.125rem;">⚙️</span>
+                    </button>
+
+                    <!-- Divider -->
+                    <div style="width: 1px; height: 24px; background: var(--color-border);"></div>
+
+                    <!-- Status Badge -->
+                    <div class="status-badge success" id="header-status-badge" style="display: none;">
+                        <div class="status-dot"></div>
+                        <span id="header-status-text">Online</span>
+                    </div>
+
+                    <!-- Update Button -->
+                    <button class="btn btn-primary" id="update-btn" onclick="monitorPatient()" style="display: none;">
+                        <span>🔄</span>
+                        <span>Update</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div id="dashboard-content" style="display: none;">
+                    <!-- Alert Banner -->
+                    <div id="alert-banner" style="display: none;"></div>
+
+                    <!-- Collapsible Metrics Section -->
+                    <div class="metrics-section" id="metrics-section">
+                        <div class="metrics-header" onclick="toggleMetrics()">
+                            <div class="metrics-header-left">
+                                <div class="metrics-header-title">📊 Overview Metrics</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                                <div class="metrics-quick-view" id="metrics-quick-view">
+                                    <div class="quick-metric">
+                                        <span>Risk:</span>
+                                        <span class="quick-metric-value" id="quick-risk">—</span>
+                                    </div>
+                                    <div class="quick-metric">
+                                        <span>📍</span>
+                                        <span class="quick-metric-value" id="quick-location">Tracking</span>
+                                    </div>
+                                    <div class="quick-metric">
+                                        <span>📱</span>
+                                        <span class="quick-metric-value" id="quick-device">—</span>
+                                    </div>
+                                    <div class="quick-metric">
+                                        <span>🔋</span>
+                                        <span class="quick-metric-value" id="quick-battery">—</span>
+                                    </div>
+                                </div>
+                                <div class="expand-icon">▼</div>
+                            </div>
+                        </div>
+
+                        <div class="metrics-content">
+                            <div class="metrics-grid-wrapper">
+                                <div class="metrics-grid">
+                                    <!-- Risk Score -->
+                                    <div class="risk-score-card low" id="risk-card">
+                                        <div class="risk-score-value" id="risk-score">—</div>
+                                        <div class="risk-score-label">
+                                            Risk Score
+                                            <span class="api-info">
+                                                i
+                                                <div class="api-tooltip">
+                                                    <div class="api-badge">Nokia APIs #1-5</div>
+                                                    <div class="api-name">🤖 AI Risk Analysis</div>
+                                                    <div>Combines Location (#1), Device Status (#3), and SIM Swap (#4) data. AI calculates risk score (0-100). Critical alerts automatically activate QoS API (#5) for emergency network priority.</div>
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div style="margin-top: 0.5rem; font-size: 0.8125rem; font-weight: 500;" id="risk-status">Monitoring</div>
+                                    </div>
+
+                                    <!-- Location -->
+                                    <div class="metric-card">
+                                        <div class="metric-icon" style="background: var(--color-primary-light); color: var(--color-primary);">📍</div>
+                                        <div class="metric-label">
+                                            Location
+                                            <span class="live-badge">
+                                                <span class="live-dot"></span>
+                                                Live
+                                            </span>
+                                            <span class="api-info">
+                                                i
+                                                <div class="api-tooltip">
+                                                    <div class="api-badge">Nokia API #1</div>
+                                                    <div class="api-name">📍 Location Retrieval</div>
+                                                    <div>Real-time GPS tracking using network-level positioning. Retrieves current location coordinates with accuracy radius.</div>
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div class="metric-value" style="font-size: 1rem;" id="location-status">Tracking</div>
+                                        <div class="metric-subtitle" id="last-update">Updated: —</div>
+                                    </div>
+
+                                    <!-- Device -->
+                                    <div class="metric-card">
+                                        <div class="metric-icon" style="background: var(--color-success-bg); color: var(--color-success);">📱</div>
+                                        <div class="metric-label">
+                                            Device
+                                            <span class="api-info">
+                                                i
+                                                <div class="api-tooltip">
+                                                    <div class="api-badge">Nokia API #3</div>
+                                                    <div class="api-name">📱 Device Status</div>
+                                                    <div>Monitors device connectivity, network type (5G/4G/3G), signal strength, and battery level in real-time.</div>
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div class="metric-value" style="font-size: 1.25rem;" id="device-status">—</div>
+                                        <div class="metric-subtitle" id="network-type">Network: —</div>
+                                    </div>
+
+                                    <!-- Battery -->
+                                    <div class="metric-card">
+                                        <div class="metric-icon" style="background: var(--color-warning-bg); color: var(--color-warning);">🔋</div>
+                                        <div class="metric-label">
+                                            Battery
+                                            <span class="api-info">
+                                                i
+                                                <div class="api-tooltip">
+                                                    <div class="api-badge">Nokia API #3</div>
+                                                    <div class="api-name">🔋 Device Status</div>
+                                                    <div>Monitors battery level and charging status from network data. Alerts caregivers when battery is critically low.</div>
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div class="metric-value" style="font-size: 1.25rem;" id="battery-level">—</div>
+                                        <div class="metric-subtitle">Signal: <span id="signal-strength">—</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Grid -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <!-- Map -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    📍 Live Location
+                                    <span class="live-badge">
+                                        <span class="live-dot"></span>
+                                        Nokia API
+                                    </span>
+                                    <span class="api-info">
+                                        i
+                                        <div class="api-tooltip">
+                                            <div class="api-badge">Nokia API #1</div>
+                                            <div class="api-name">📍 Location Retrieval</div>
+                                            <div>Displays real-time GPS position from network-level tracking. Updates automatically every 30 seconds with accuracy indicators.</div>
+                                        </div>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="map"></div>
+                                <div style="margin-top: 0.75rem; padding: 0.5rem; background: var(--color-bg); border-radius: 6px; font-size: 0.8125rem; color: var(--color-text-secondary); text-align: center;" id="map-coords">
+                                    <span style="font-weight: 600;">Coordinates:</span> <span id="map-lat-lng">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Factors -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    ⚠️ Risk Factors
+                                    <span class="api-info">
+                                        i
+                                        <div class="api-tooltip">
+                                            <div class="api-badge">Nokia API #4</div>
+                                            <div class="api-name">🔐 SIM Swap Detection</div>
+                                            <div>Detects suspicious SIM card changes that could indicate fraud or device theft. Alerts when recent SIM swaps are detected.</div>
+                                        </div>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-list" id="risk-factors">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">📊</div>
+                                        <div class="empty-text">Waiting for data...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+                        <!-- Recommendations -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    💡 Recommendations
+                                    <span class="api-info">
+                                        i
+                                        <div class="api-tooltip">
+                                            <div class="api-badge">AI Analysis</div>
+                                            <div class="api-name">💡 Smart Recommendations</div>
+                                            <div>AI-powered suggestions based on analyzing data from all Nokia APIs. Provides actionable advice to improve safety and reduce risks.</div>
+                                        </div>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-list" id="recommendations">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">🤔</div>
+                                        <div class="empty-text">Waiting...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Safe Zones -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    🗺️ Safe Zones
+                                    <span class="api-info">
+                                        i
+                                        <div class="api-tooltip">
+                                            <div class="api-badge">Nokia API #2</div>
+                                            <div class="api-name">🗺️ Geofencing</div>
+                                            <div>Creates virtual boundaries around safe locations. Automatically alerts when patient enters or exits defined zones.</div>
+                                        </div>
+                                    </span>
+                                </div>
+                                <button class="btn btn-secondary" onclick="showAddGeofenceModal()" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem;">
+                                    <span>+</span>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="geofences-list">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">🏠</div>
+                                        <div class="empty-text">No zones</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Alerts -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">🔔 Recent Alerts</div>
+                            </div>
+                            <div class="card-body">
+                                <div id="alerts-list">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">✅</div>
+                                        <div class="empty-text">No alerts</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empty State (No Patient Selected) -->
+                <div id="no-patient-state" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                    <div class="empty-state" style="max-width: 400px;">
+                        <div class="empty-icon" style="font-size: 4rem;">👤</div>
+                        <div class="empty-text" style="font-size: 1.125rem; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-text-secondary);">No Patient Selected</div>
+                        <div class="empty-text">Select a patient from the sidebar or add a new patient to start monitoring.</div>
+                        <button class="btn btn-primary" onclick="showAddPatientModal()" style="margin-top: 1.5rem;">
+                            <span>+</span>
+                            <span>Add Your First Patient</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Patient Modal -->
+    <div id="add-patient-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Add New Patient</div>
+                <button class="test-toggle" onclick="toggleTestDataPatient(event)" id="test-toggle-patient">
+                    <div class="test-indicator"></div>
+                    <span>Fill Test Data</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="add-patient-form">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" name="full_name" required class="form-input" placeholder="e.g., Maria Rodriguez">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number *</label>
+                        <input type="tel" name="phone_number" required pattern="^\+?[1-9]\d{1,14}$" class="form-input" placeholder="e.g., +34612345678">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Emergency Contact Name</label>
+                        <input type="text" name="emergency_contact_name" class="form-input" placeholder="e.g., John Rodriguez">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Emergency Contact Phone</label>
+                        <input type="tel" name="emergency_contact_phone" class="form-input" placeholder="e.g., +34699887766">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideAddPatientModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="document.getElementById('add-patient-form').requestSubmit()">Create Patient</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Geofence Modal -->
+    <div id="add-geofence-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Add Safe Zone</div>
+                <button class="test-toggle" onclick="toggleTestDataGeofence(event)" id="test-toggle-geofence">
+                    <div class="test-indicator"></div>
+                    <span>Fill Test Data</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="add-geofence-form">
+                    <div class="form-group">
+                        <label class="form-label">Zone Name *</label>
+                        <input type="text" name="name" required placeholder="e.g., Home, Hospital" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Latitude *</label>
+                        <input type="number" name="latitude" required step="0.000001" placeholder="41.3851" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Longitude *</label>
+                        <input type="number" name="longitude" required step="0.000001" placeholder="2.1734" class="form-input">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Radius (meters) *</label>
+                        <input type="number" name="radius_meters" required min="50" max="10000" value="500" class="form-input">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideAddGeofenceModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="document.getElementById('add-geofence-form').requestSubmit()">Create Zone</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

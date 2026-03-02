@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: guardianlink-db
+    environment:
+      POSTGRES_USER: guardianlink
+      POSTGRES_PASSWORD: guardianlink
+      POSTGRES_DB: guardianlink
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guardianlink"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: guardianlink-api
+    ports:
+      - "8000:8000"
+    environment:
+      - USE_MOCK=true
+      - DATABASE_URL=postgresql://guardianlink:guardianlink@postgres:5432/guardianlink
+      - NOKIA_API_TOKEN=${NOKIA_API_TOKEN:-}
+      - NOKIA_ORG_ID=${NOKIA_ORG_ID:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    image: python:3.11-alpine
+    container_name: guardianlink-frontend
+    working_dir: /app
+    command: python -m http.server 8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend:/app
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
