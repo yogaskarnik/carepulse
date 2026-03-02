@@ -1,5 +1,5 @@
-const API_BASE = 'http://localhost:8000/api';
-const WS_BASE = 'ws://localhost:8000/ws';
+const API_BASE = 'http://34.163.202.97:8000/api';
+const WS_BASE = 'ws://34.163.202.97:8000/ws';
 
 let map = null;
 let currentMarker = null;
