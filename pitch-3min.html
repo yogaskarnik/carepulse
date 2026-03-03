@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarePulse - 3 Minute Pitch</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: white;
+            overflow: hidden;
+        }
+
+        .slides-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide {
+            min-width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 8rem 6rem 10rem 6rem;
+            position: relative;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 2rem;
+            right: 3rem;
+            font-size: 1rem;
+            opacity: 0.5;
+            font-weight: 500;
+        }
+
+        .logo {
+            position: absolute;
+            top: 2rem;
+            left: 3rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: 'Sora', sans-serif;
+            background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h1 {
+            font-family: 'Sora', sans-serif;
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            margin-top: 3rem;
+            background: linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-family: 'Sora', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #E2E8F0;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: #CBD5E1;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        .content {
+            font-size: 1.125rem;
+            line-height: 1.7;
+            color: #E2E8F0;
+        }
+
+        .stat {
+            font-size: 3rem;
+            font-weight: 800;
+            font-family: 'Sora', sans-serif;
+            background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 2rem 0 0.5rem 0;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+
+        .flow-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(66, 133, 244, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            font-weight: 600;
+            font-size: 1.125rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: #4285F4;
+        }
+
+        .value-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .value-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(66, 133, 244, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .value-number {
+            font-size: 2rem;
+            font-weight: 800;
+            font-family: 'Sora', sans-serif;
+            background: linear-gradient(135deg, #34A853 0%, #4285F4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .bullet-list {
+            list-style: none;
+            margin-top: 1.5rem;
+        }
+
+        .bullet-list li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+            font-size: 1.0625rem;
+            line-height: 1.6;
+        }
+
+        .bullet-list li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #4285F4;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+
+        .demo-screen {
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid #4285F4;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #4285F4;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 3rem;
+            right: 3rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 1000;
+            opacity: 0.95;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #4285F4;
+        }
+
+        .demo-link {
+            color: #4285F4;
+            text-decoration: none;
+            border-bottom: 2px solid #4285F4;
+            padding-bottom: 2px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .demo-link:hover {
+            color: #34A853;
+            border-bottom-color: #34A853;
+            transform: translateY(-2px);
+        }
+
+        .source-note {
+            position: absolute;
+            bottom: 6rem;
+            left: 3rem;
+            font-size: 0.75rem;
+            color: #64748B;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        .emphasis {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #4285F4;
+            margin: 1rem 0 0 0;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .comparison {
+            display: flex;
+            gap: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .comparison-item {
+            flex: 1;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 16px;
+        }
+
+        .comparison-bad {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .comparison-good {
+            background: rgba(52, 168, 83, 0.1);
+            border: 2px solid rgba(52, 168, 83, 0.3);
+        }
+
+        .timer {
+            position: fixed;
+            top: 2rem;
+            right: 6rem;
+            font-size: 3rem;
+            font-weight: 800;
+            font-family: 'Sora', sans-serif;
+            color: #EF4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="slides-container" id="slides">
+        <!-- Slide 1: Problem (20s) -->
+        <div class="slide">
+            <div class="logo">CarePulse</div>
+            <div class="slide-number">1/4</div>
+
+            <div class="stat">30%*</div>
+            <h1>Of Elderly Fall Each Year<br>Many Die Waiting for Help</h1>
+
+            <div class="content">
+                <ul class="bullet-list">
+                    <li><strong>4 million</strong> elderly people in Europe live alone</li>
+                    <li><strong>30% fall</strong> each year - critical window for survival</li>
+                    <li><strong>Current systems</strong> require human monitoring and manual response</li>
+                    <li><strong>The problem:</strong> Delayed detection means delayed help</li>
+                </ul>
+            </div>
+
+            <div class="emphasis" style="margin-top: 1.5rem;">
+                We need autonomous monitoring that responds instantly.
+            </div>
+
+            <div class="source-note">
+                * WHO Global Report on Falls Prevention in Older Age (2024)
+            </div>
+        </div>
+
+        <!-- Slide 2: Solution (30s) -->
+        <div class="slide">
+            <div class="logo">CarePulse</div>
+            <div class="slide-number">2/4</div>
+
+            <h1>Autonomous AI<br>That Responds in Seconds</h1>
+            <div class="subtitle">Gemini AI + 5 Nokia APIs + Model Context Protocol</div>
+
+            <div class="flow-diagram">
+                <div class="flow-box">Patient Device<br>(5G)</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">5 Nokia APIs</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Gemini AI<br>(MCP)</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">Autonomous<br>Response</div>
+            </div>
+
+            <div class="content">
+                <ul class="bullet-list">
+                    <li><strong>Location Retrieval</strong> - Real-time GPS tracking</li>
+                    <li><strong>Device Status</strong> - Network health monitoring</li>
+                    <li><strong>SIM Swap Detection</strong> - Fraud prevention</li>
+                    <li><strong>QoS on Demand</strong> - Emergency network priority</li>
+                    <li><strong>Geofencing</strong> - Safe zone alerts</li>
+                </ul>
+            </div>
+
+            <div class="emphasis" style="margin-top: 1rem;">
+                When AI detects risk, it doesn't wait. It acts.
+            </div>
+        </div>
+
+        <!-- Slide 3: Demo (90s) -->
+        <div class="slide">
+            <div class="logo">CarePulse</div>
+            <div class="slide-number">3/4</div>
+
+            <h1>Watch AI Decide<br>Autonomously</h1>
+
+            <div class="demo-screen">
+                <div class="demo-title">🤖 LIVE DEMO</div>
+                <div style="font-size: 1.5rem; color: #CBD5E1; margin-top: 1rem;">
+                    <a href="http://34.163.202.97:8080" target="_blank" class="demo-link" style="font-size: 1.5rem;">
+                        → Open CarePulse Dashboard
+                    </a>
+                </div>
+                <div style="font-size: 1.125rem; color: #94A3B8; margin-top: 2rem;">
+                    Click "MCP Demo" → Watch Gemini AI work autonomously
+                </div>
+            </div>
+
+            <div class="content" style="margin-top: 2rem;">
+                <div class="comparison">
+                    <div class="comparison-item comparison-bad">
+                        <div style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">❌ Traditional</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #EF4444;">Delayed</div>
+                        <div style="margin-top: 0.5rem; opacity: 0.8;">Manual monitoring + response</div>
+                    </div>
+                    <div class="comparison-item comparison-good">
+                        <div style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">✅ CarePulse</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: #34A853;">8 seconds</div>
+                        <div style="margin-top: 0.5rem; opacity: 0.8;">Fully autonomous</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Value + Close (40s) -->
+        <div class="slide">
+            <div class="logo">CarePulse</div>
+            <div class="slide-number">4/4</div>
+
+            <h1>Lives Saved +<br>€2,400 Per Patient</h1>
+
+            <div class="value-grid">
+                <div class="value-card">
+                    <div class="value-number">77%</div>
+                    <div style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Cost Reduction</div>
+                    <div style="opacity: 0.8; font-size: 0.9375rem;">€420/year vs €1,800 traditional care</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-number">8 sec</div>
+                    <div style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Response Time</div>
+                    <div style="opacity: 0.8; font-size: 0.9375rem;">Instant autonomous response</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-number">5 APIs</div>
+                    <div style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Nokia Integration</div>
+                    <div style="opacity: 0.8; font-size: 0.9375rem;">Most comprehensive use case</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-number">100%</div>
+                    <div style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">Autonomous</div>
+                    <div style="opacity: 0.8; font-size: 0.9375rem;">True agentic AI with MCP</div>
+                </div>
+            </div>
+
+            <div class="emphasis" style="margin-top: 1.5rem; font-size: 2rem; text-align: center;">
+                CarePulse: The Only Autonomous Patient Monitoring System
+            </div>
+
+            <div style="text-align: center; margin-top: 1rem; font-size: 1.125rem; color: #94A3B8;">
+                Ready to deploy today. Seeking partnership with Nokia.
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" onclick="prevSlide()">← Previous</button>
+        <button class="control-btn" onclick="nextSlide()">Next →</button>
+        <button class="control-btn" onclick="goToSlide(0)">Reset</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 4;
+
+        function updateSlides() {
+            const container = document.getElementById('slides');
+            container.style.transform = `translateX(-${currentSlide * 100}vw)`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlides();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlides();
+            }
+        }
+
+        function goToSlide(n) {
+            currentSlide = n;
+            updateSlides();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            } else if (e.key === 'Home') {
+                goToSlide(0);
+            }
+        });
+    </script>
+</body>
+</html>
